@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сканер паллет (Web-версия)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .input-group {
+            display: flex;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .input-group label {
+            margin-right: 10px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .input-group input {
+            flex-grow: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button.primary {
+            background-color: #007bff;
+            color: white;
+        }
+        button.success {
+            background-color: #28a745;
+            color: white;
+        }
+        button.danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        button.info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .status-bar {
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .status-bar.alert {
+            background-color: #fff3cd;
+            color: #856404;
+            animation: blink 1s linear 3;
+        }
+        @keyframes blink {
+            50% { background-color: #ffeeba; }
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Сканер паллет</h1>
+        
+        <div class="input-group">
+            <label for="search-input">Введите данные:</label>
+            <input type="text" id="search-input" placeholder="Введите код места, паллета или штрих-код">
+        </div>
+        
+        <div class="button-group">
+            <button class="primary" id="search-btn">Поиск</button>
+            <button class="success" id="mark-valid-btn">Актуально</button>
+            <button class="danger" id="mark-invalid-btn">Неактуально</button>
+            <button class="info" id="add-btn">Добавить</button>
+            <button id="load-btn">Загрузить</button>
+            <button id="save-btn">Сохранить</button>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table id="results-table">
+                <thead>
+                    <tr>
+                        <th>Код места</th>
+                        <th>Паллет</th>
+                        <th>Штрих-код</th>
+                        <th>Статус</th>
+                        <th>Дата</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Результаты будут здесь -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="status-bar" id="status-bar">Готов к работе</div>
+    </div>
+
+    <!-- Модальное окно для отметки неактуальности -->
+    <div id="invalid-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Причина неактуальности</h2>
+            <div class="form-group">
+                <label for="reason-input">Укажите текущее МХ:</label>
+                <input type="text" id="reason-input" placeholder="Введите причину">
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-reason-btn">Отмена</button>
+                <button class="primary" id="save-reason-btn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для добавления записи -->
+    <div id="add-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Добавить запись</h2>
+            <div class="form-group">
+                <label for="place-cod-input">Код места (place_cod):</label>
+                <input type="text" id="place-cod-input" placeholder="Введите код места">
+            </div>
+            <div class="form-group">
+                <label for="pallet-input">Номер паллета:</label>
+                <input type="text" id="pallet-input" placeholder="Введите номер паллета">
+            </div>
+            <div class="form-group">
+                <label for="barcode-input">Штрих-код:</label>
+                <input type="text" id="barcode-input" placeholder="Введите штрих-код">
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-add-btn">Отмена</button>
+                <button class="primary" id="save-add-btn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для загрузки файла -->
+    <div id="load-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Загрузить данные</h2>
+            <div class="form-group">
+                <label for="file-input">Выберите файл (CSV или Excel):</label>
+                <input type="file" id="file-input" accept=".csv,.xlsx,.xls">
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-load-btn">Отмена</button>
+                <button class="primary" id="confirm-load-btn">Загрузить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация данных
+        let data = [];
+        let currentRecord = null;
+
+        // Элементы DOM
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const markValidBtn = document.getElementById('mark-valid-btn');
+        const markInvalidBtn = document.getElementById('mark-invalid-btn');
+        const addBtn = document.getElementById('add-btn');
+        const loadBtn = document.getElementById('load-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const resultsTable = document.getElementById('results-table').getElementsByTagName('tbody')[0];
+        const statusBar = document.getElementById('status-bar');
+        
+        // Модальные окна
+        const invalidModal = document.getElementById('invalid-modal');
+        const addModal = document.getElementById('add-modal');
+        const loadModal = document.getElementById('load-modal');
+        
+        // Кнопки закрытия модальных окон
+        document.querySelectorAll('.close').forEach(closeBtn => {
+            closeBtn.onclick = function() {
+                invalidModal.style.display = 'none';
+                addModal.style.display = 'none';
+                loadModal.style.display = 'none';
+            }
+        });
+
+        // Обработчики событий
+        searchBtn.addEventListener('click', searchData);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchData();
+        });
+        markValidBtn.addEventListener('click', markValid);
+        markInvalidBtn.addEventListener('click', () => invalidModal.style.display = 'block');
+        addBtn.addEventListener('click', () => addModal.style.display = 'block');
+        loadBtn.addEventListener('click', () => loadModal.style.display = 'block');
+        saveBtn.addEventListener('click', saveData);
+        
+        document.getElementById('save-reason-btn').addEventListener('click', saveReason);
+        document.getElementById('cancel-reason-btn').addEventListener('click', () => invalidModal.style.display = 'none');
+        document.getElementById('save-add-btn').addEventListener('click', saveAddRecord);
+        document.getElementById('cancel-add-btn').addEventListener('click', () => addModal.style.display = 'none');
+        document.getElementById('confirm-load-btn').addEventListener('click', loadData);
+        document.getElementById('cancel-load-btn').addEventListener('click', () => loadModal.style.display = 'none');
+
+        // Функция извлечения цифр из строки
+        function extractDigits(text) {
+            return text.replace(/\D/g, '');
+        }
+
+        // Функция поиска данных
+        function searchData() {
+            const query = extractDigits(searchInput.value.trim());
+            
+            if (!query) {
+                updateStatus("Введите данные для поиска");
+                return;
+            }
+            
+            if (data.length > 0) {
+                const results = data.filter(item => 
+                    extractDigits(item.place_cod).includes(query) || 
+                    extractDigits(item.Паллет).includes(query) || 
+                    extractDigits(item.Баркод).includes(query)
+                );
+                
+                if (results.length > 0) {
+                    currentRecord = results[0];
+                    showResults(results);
+                    updateStatus(`Найдено: ${results.length} записей`);
+                    
+                    if (results.some(item => /Списано|Буфер/i.test(item.Статус))) {
+                        visualAlert();
+                    }
+                    
+                    searchInput.value = '';
+                    return;
+                }
+            }
+            
+            updateStatus("Совпадений не найдено");
+            searchInput.value = '';
+        }
+
+        // Функция отображения результатов
+        function showResults(results) {
+            resultsTable.innerHTML = '';
+            
+            results.forEach(item => {
+                const row = resultsTable.insertRow();
+                row.insertCell(0).textContent = item.place_cod;
+                row.insertCell(1).textContent = item.Паллет;
+                row.insertCell(2).textContent = item.Баркод;
+                row.insertCell(3).textContent = item.Статус;
+                row.insertCell(4).textContent = item.Дата;
+                
+                // Подсветка строки в зависимости от статуса
+                if (/Списано|Буфер/i.test(item.Статус)) {
+                    row.style.backgroundColor = '#fff3cd';
+                } else if (/Актуально/i.test(item.Статус)) {
+                    row.style.backgroundColor = '#d4edda';
+                } else if (/Неактуально/i.test(item.Статус)) {
+                    row.style.backgroundColor = '#f8d7da';
+                }
+            });
+        }
+
+        // Функция отметки как актуально
+        function markValid() {
+            if (!currentRecord) {
+                alert("Сначала найдите запись");
+                return;
+            }
+            
+            data = data.map(item => {
+                if (item.place_cod === currentRecord.place_cod && item.Паллет === currentRecord.Паллет) {
+                    return { ...item, Статус: 'Актуально' };
+                }
+                return item;
+            });
+            
+            updateStatus("Статус: Актуально");
+            searchData();
+        }
+
+        // Функция сохранения причины неактуальности
+        function saveReason() {
+            const reason = document.getElementById('reason-input').value.trim();
+            
+            if (!reason) {
+                alert("Необходимо указать МХ");
+                return;
+            }
+            
+            data = data.map(item => {
+                if (item.place_cod === currentRecord.place_cod && item.Паллет === currentRecord.Паллет) {
+                    return { ...item, Статус: 'Неактуально', Причина: reason };
+                }
+                return item;
+            });
+            
+            invalidModal.style.display = 'none';
+            document.getElementById('reason-input').value = '';
+            updateStatus(`Статус: Неактуально (МХ: ${reason})`);
+            searchData();
+        }
+
+        // Функция добавления записи
+        function saveAddRecord() {
+            const placeCod = document.getElementById('place-cod-input').value.trim();
+            const pallet = document.getElementById('pallet-input').value.trim();
+            const barcode = document.getElementById('barcode-input').value.trim();
+            
+            if (!placeCod || !pallet || !barcode) {
+                alert("Все поля должны быть заполнены");
+                return;
+            }
+            
+            const now = new Date();
+            const newRecord = {
+                place_cod: placeCod,
+                Паллет: pallet,
+                Баркод: barcode,
+                Статус: "Новый",
+                Дата: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+                Причина: ""
+            };
+            
+            data.push(newRecord);
+            addModal.style.display = 'none';
+            document.getElementById('place-cod-input').value = '';
+            document.getElementById('pallet-input').value = '';
+            document.getElementById('barcode-input').value = '';
+            updateStatus(`Добавлен паллет: ${pallet}`);
+            saveDataToLocalStorage();
+        }
+
+        // Функция загрузки данных
+        function loadData() {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert("Выберите файл для загрузки");
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    let newData = [];
+                    
+                    if (file.name.endsWith('.csv')) {
+                        // Простая обработка CSV (в реальном приложении нужно использовать библиотеку)
+                        const lines = content.split('\n');
+                        const headers = lines[0].split(',').map(h => h.trim());
+                        
+                        for (let i = 1; i < lines.length; i++) {
+                            if (!lines[i].trim()) continue;
+                            
+                            const values = lines[i].split(',');
+                            const record = {};
+                            
+                            headers.forEach((header, index) => {
+                                record[header] = values[index] ? values[index].trim() : '';
+                            });
+                            
+                            newData.push(record);
+                        }
+                    } else {
+                        // Для Excel нужно использовать библиотеку (например, xlsx)
+                        alert("Для загрузки Excel файлов требуется дополнительная библиотека");
+                        loadModal.style.display = 'none';
+                        return;
+                    }
+                    
+                    // Проверяем обязательные поля
+                    const requiredFields = ["place_cod", "Паллет", "Баркод"];
+                    const missingFields = requiredFields.filter(field => 
+                        !newData[0] || !(field in newData[0])
+                    );
+                    
+                    if (missingFields.length > 0) {
+                        alert(`В файле отсутствуют обязательные поля: ${missingFields.join(', ')}`);
+                        return;
+                    }
+                    
+                    // Добавляем недостающие поля
+                    newData = newData.map(item => {
+                        if (!('Статус' in item)) item.Статус = 'Новый';
+                        if (!('Дата' in item)) {
+                            const now = new Date();
+                            item.Дата = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                        }
+                        if (!('Причина' in item)) item.Причина = '';
+                        return item;
+                    });
+                    
+                    data = newData;
+                    loadModal.style.display = 'none';
+                    fileInput.value = '';
+                    updateStatus(`Загружено ${data.length} записей`);
+                    saveDataToLocalStorage();
+                    searchData();
+                    
+                } catch (e) {
+                    alert(`Ошибка при загрузке файла: ${e.message}`);
+                }
+            };
+            
+            if (file.name.endsWith('.csv')) {
+                reader.readAsText(file);
+            } else {
+                reader.readAsBinaryString(file);
+            }
+        }
+
+        // Функция сохранения данных
+        function saveData() {
+            if (data.length === 0) {
+                alert("Нет данных для сохранения");
+                return;
+            }
+            
+            try {
+                // Создаем CSV содержимое
+                const headers = ["place_cod", "Паллет", "Баркод", "Статус", "Дата", "Причина"];
+                const csvContent = [
+                    headers.join(','),
+                    ...data.map(item => headers.map(header => item[header]).join(','))
+                ].join('\n');
+                
+                // Создаем blob и ссылку для скачивания
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                
+                const now = new Date();
+                const fileName = `сканирование_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}.csv`;
+                link.setAttribute('download', fileName);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                updateStatus(`Данные сохранены в ${fileName}`);
+                
+            } catch (e) {
+                alert(`Не удалось сохранить файл: ${e.message}`);
+            }
+        }
+
+        // Функция сохранения данных в localStorage
+        function saveDataToLocalStorage() {
+            try {
+                localStorage.setItem('palletScannerData', JSON.stringify(data));
+            } catch (e) {
+                console.error("Ошибка при сохранении в localStorage:", e);
+            }
+        }
+
+        // Функция загрузки данных из localStorage
+        function loadFromLocalStorage() {
+            try {
+                const savedData = localStorage.getItem('palletScannerData');
+                if (savedData) {
+                    data = JSON.parse(savedData);
+                    updateStatus("Данные загружены из локального хранилища");
+                }
+            } catch (e) {
+                console.error("Ошибка при загрузке из localStorage:", e);
+            }
+        }
+
+        // Функция обновления статуса
+        function updateStatus(message) {
+            statusBar.textContent = message;
+        }
+
+        // Функция визуального оповещения
+        function visualAlert() {
+            statusBar.textContent = "ВНИМАНИЕ: Найдена запись со статусом 'Списано' или 'Буфер'!";
+            statusBar.classList.add('alert');
+            
+            setTimeout(() => {
+                statusBar.classList.remove('alert');
+            }, 3000);
+        }
+
+        // Инициализация при загрузке страницы
+        window.onload = function() {
+            loadFromLocalStorage();
+            searchInput.focus();
+        };
+    </script>
+</body>
+</html>
