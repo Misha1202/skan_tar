@@ -3,244 +3,806 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Учет Тары</title>
+    <title>Warframe Builder - Оптимизатор билдов</title>
     <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #e74c3c;
+            --text-color: #ecf0f1;
+            --highlight-color: #3498db;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            background-color: var(--primary-color);
+            color: var(--text-color);
         }
+        
+        header {
+            background-color: var(--secondary-color);
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
         .container {
-            background-color: #1e1e1e;
-            padding: 25px;
-            border-radius: 10px;
-            width: 100%;
-            max-width: 500px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-        h2 {
-            margin-top: 0;
-            color: #9c27b0;
-            text-align: center;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #444;
-            border-radius: 5px;
-            background-color: #2a2a2a;
-            color: #fff;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #9c27b0;
-        }
-        button {
-            padding: 12px 20px;
-            background-color: #9c27b0;
-            border: none;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-            transition: background-color 0.2s;
-            margin-top: 5px;
-        }
-        button:hover {
-            background-color: #7b1fa2;
-        }
-        button.secondary {
-            background-color: #673ab7;
-        }
-        button.secondary:hover {
-            background-color: #5e35b1;
-        }
-        button.danger {
-            background-color: #e91e63;
-        }
-        button.danger:hover {
-            background-color: #c2185b;
-        }
-        table {
-            width: 100%;
-            margin-top: 20px;
-            border-collapse: collapse;
-            background-color: #2a2a2a;
-        }
-        th, td {
-            padding: 12px;
-            text-align: center;
-            border: 1px solid #444;
-        }
-        th {
-            background-color: #9c27b0;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #333;
-        }
-        .total-count {
-            text-align: center;
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #333;
-            border-radius: 5px;
-        }
-        .button-group {
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            flex-wrap: wrap;
+            padding: 1rem;
+            gap: 1rem;
         }
-        .button-group button {
+        
+        .builder-section {
             flex: 1;
+            min-width: 300px;
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .results-section {
+            flex: 2;
+            min-width: 300px;
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        h1, h2, h3 {
+            color: var(--highlight-color);
+        }
+        
+        select, input, button {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+            border: none;
+            background-color: #3d566e;
+            color: var(--text-color);
+            width: 100%;
+        }
+        
+        button {
+            background-color: var(--accent-color);
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #c0392b;
+        }
+        
+        .mod-slot {
+            display: flex;
+            align-items: center;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background-color: #3d566e;
+            border-radius: 4px;
+        }
+        
+        .mod-slot select {
+            flex: 1;
+            margin-right: 0.5rem;
+        }
+        
+        .mod-slot input {
+            width: 60px;
+        }
+        
+        .stats-display {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #3d566e;
+            border-radius: 4px;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.5rem 0;
+        }
+        
+        .stat-name {
+            font-weight: bold;
+        }
+        
+        .stat-value {
+            color: var(--highlight-color);
+        }
+        
+        .enemy-level-analysis {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #3d566e;
+            border-radius: 4px;
+        }
+        
+        .recommended-mods {
+            margin-top: 1rem;
+        }
+        
+        .mod-card {
+            display: inline-block;
+            margin: 0.5rem;
+            padding: 0.5rem;
+            background-color: #3d566e;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .mod-card:hover {
+            transform: scale(1.05);
+            background-color: var(--highlight-color);
+        }
+        
+        .tab-container {
+            margin-top: 1rem;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            border-bottom: 2px solid var(--highlight-color);
+        }
+        
+        .tab-button {
+            padding: 0.5rem 1rem;
+            background-color: var(--secondary-color);
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .tab-button.active {
+            background-color: var(--highlight-color);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 1rem 0;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
+    <header>
+        <h1>Warframe Builder</h1>
+        <p>Оптимизатор билдов для оружия, компаньонов и варфреймов</p>
+    </header>
+    
     <div class="container">
-        <h2>Учет Тары</h2>
-        <input type="text" id="taraInput" placeholder="Введите тару..." autocomplete="off" />
-        <button onclick="addTara()">Ввод</button>
-
-        <table id="taraTable">
-            <thead>
-                <tr>
-                    <th>Тара</th>
-                    <th>Время</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-        <div id="totalCount" class="total-count"></div>
+        <div class="builder-section">
+            <h2>Конструктор билда</h2>
+            
+            <div class="tab-container">
+                <div class="tab-buttons">
+                    <button class="tab-button active" onclick="openTab('weapons')">Оружие</button>
+                    <button class="tab-button" onclick="openTab('warframes')">Варфреймы</button>
+                    <button class="tab-button" onclick="openTab('companions')">Компаньоны</button>
+                </div>
+                
+                <div id="weapons" class="tab-content active">
+                    <h3>Выберите оружие</h3>
+                    <select id="weapon-type">
+                        <option value="">-- Тип оружия --</option>
+                        <option value="rifle">Винтовка</option>
+                        <option value="shotgun">Дробовик</option>
+                        <option value="pistol">Пистолет</option>
+                        <option value="melee">Ближний бой</option>
+                        <option value="archgun">Арчган</option>
+                    </select>
+                    
+                    <select id="weapon-select">
+                        <option value="">-- Выберите оружие --</option>
+                        <!-- Опции будут заполнены JavaScript -->
+                    </select>
+                    
+                    <h3>Моды</h3>
+                    <div id="mod-slots">
+                        <!-- Слоты для модов будут созданы JavaScript -->
+                    </div>
+                    
+                    <button onclick="addModSlot()">Добавить слот для мода</button>
+                    <button onclick="optimizeBuild()">Оптимизировать билд</button>
+                </div>
+                
+                <div id="warframes" class="tab-content">
+                    <h3>Выберите варфрейм</h3>
+                    <select id="warframe-select">
+                        <option value="">-- Выберите варфрейм --</option>
+                        <!-- Опции будут заполнены JavaScript -->
+                    </select>
+                    
+                    <h3>Моды</h3>
+                    <div id="warframe-mod-slots">
+                        <!-- Слоты для модов будут созданы JavaScript -->
+                    </div>
+                    
+                    <button onclick="addWarframeModSlot()">Добавить слот для мода</button>
+                    <button onclick="optimizeWarframeBuild()">Оптимизировать билд</button>
+                </div>
+                
+                <div id="companions" class="tab-content">
+                    <h3>Выберите компаньона</h3>
+                    <select id="companion-type">
+                        <option value="">-- Тип компаньона --</option>
+                        <option value="sentinel">Страж</option>
+                        <option value="pet">Питомец</option>
+                        <option value="moa">MOA</option>
+                    </select>
+                    
+                    <select id="companion-select">
+                        <option value="">-- Выберите компаньона --</option>
+                        <!-- Опции будут заполнены JavaScript -->
+                    </select>
+                    
+                    <h3>Моды</h3>
+                    <div id="companion-mod-slots">
+                        <!-- Слоты для модов будут созданы JavaScript -->
+                    </div>
+                    
+                    <button onclick="addCompanionModSlot()">Добавить слот для мода</button>
+                    <button onclick="optimizeCompanionBuild()">Оптимизировать билд</button>
+                </div>
+            </div>
+        </div>
         
-        <div class="button-group">
-            <button onclick="downloadAndReset()" class="secondary">Скачать и Сбросить</button>
-            <button onclick="removeDuplicates()" class="danger">Удалить дубликаты</button>
+        <div class="results-section">
+            <h2>Результаты</h2>
+            
+            <div class="stats-display">
+                <h3>Характеристики</h3>
+                <div id="stats-container">
+                    <!-- Статистика будет заполнена JavaScript -->
+                    <p>Выберите оружие/варфрейм/компаньона и добавьте моды для отображения статистики.</p>
+                </div>
+            </div>
+            
+            <div class="enemy-level-analysis">
+                <h3>Анализ эффективности</h3>
+                <div id="enemy-analysis">
+                    <!-- Анализ будет заполнен JavaScript -->
+                    <p>После создания билда здесь будет показано, против каких уровней мобов он эффективен.</p>
+                </div>
+            </div>
+            
+            <div class="recommended-mods">
+                <h3>Рекомендуемые моды</h3>
+                <div id="recommended-mods-container">
+                    <!-- Рекомендуемые моды будут заполнены JavaScript -->
+                    <p>После выбора оружия/варфрейма/компаньона здесь появятся рекомендуемые моды.</p>
+                </div>
+            </div>
         </div>
     </div>
-
+    
     <script>
-        let taraList = JSON.parse(localStorage.getItem('taraList')) || [];
-
-        // Инициализация таблицы при загрузке
-        window.onload = function() {
-            updateTable();
-            document.getElementById('taraInput').focus();
+        // База данных оружия (упрощенная)
+        const weaponsDatabase = {
+            rifle: ["Soma Prime", "Fulmin", "Acceltra", "Trumna", "Tenora Prime"],
+            shotgun: ["Arca Plasmor", "Tigris Prime", "Corinth Prime", "Kuva Kohm", "Cedo"],
+            pistol: ["Kuva Nukor", "Pyrana Prime", "Catchmoon", "Tenet Cycron", "Athodai"],
+            melee: ["Gram Prime", "Redeemer Prime", "Kronen Prime", "Glaive Prime", "Nikana Prime"],
+            archgun: ["Mausolon", "Imperator Vandal", "Kuva Grattler", "Fluctus", "Corvas"]
         };
-
-        function addTara() {
-            const taraInput = document.getElementById('taraInput').value.trim();
-            if (taraInput) {
-                const time = new Date().toLocaleString();
-                taraList.push({ tara: taraInput, time: time });
-                localStorage.setItem('taraList', JSON.stringify(taraList));
-                updateTable();
-                document.getElementById('taraInput').value = '';
-                document.getElementById('taraInput').focus();
-            }
-        }
-
-        function updateTable() {
-            const tableBody = document.querySelector('#taraTable tbody');
-            const totalCountElement = document.getElementById('totalCount');
-            tableBody.innerHTML = '';
+        
+        // База данных варфреймов
+        const warframesDatabase = [
+            "Excalibur", "Rhino", "Volt", "Saryn", "Mesa", 
+            "Nova", "Trinity", "Nekros", "Wukong", "Wisp"
+        ];
+        
+        // База данных компаньонов
+        const companionsDatabase = {
+            sentinel: ["Carrier", "Helios", "Wyrm", "Shade", "Djinn"],
+            pet: ["Kavat (Smeeta)", "Kavat (Adarza)", "Kubrow (Huras)", "Kubrow (Sahasa)", "Vulpaphyla"],
+            moa: ["Lambeo MOA", "Para MOA", "Oloro MOA"]
+        };
+        
+        // База данных модов (упрощенная)
+        const modsDatabase = {
+            rifle: [
+                {name: "Serration", effect: "Урон +165%", drain: 14},
+                {name: "Split Chamber", effect: "Мультивыстрел +90%", drain: 15},
+                {name: "Vital Sense", effect: "Крит. урон +120%", drain: 9},
+                {name: "Point Strike", effect: "Крит. шанс +150%", drain: 9},
+                {name: "Hellfire", effect: "Огонь +90%", drain: 11},
+                {name: "Stormbringer", effect: "Электричество +90%", drain: 11}
+            ],
+            shotgun: [
+                {name: "Point Blank", effect: "Урон +165%", drain: 14},
+                {name: "Hell's Chamber", effect: "Мультивыстрел +120%", drain: 15},
+                {name: "Blaze", effect: "Урон +60%, Огонь +60%", drain: 11},
+                {name: "Contagious Spread", effect: "Токсины +90%", drain: 11},
+                {name: "Charged Shell", effect: "Электричество +90%", drain: 11}
+            ],
+            pistol: [
+                {name: "Hornet Strike", effect: "Урон +220%", drain: 14},
+                {name: "Barrel Diffusion", effect: "Мультивыстрел +120%", drain: 11},
+                {name: "Lethal Torrent", effect: "Мультивыстрел +60%, Скорострельность +60%", drain: 11},
+                {name: "Pistol Gambit", effect: "Крит. шанс +150%", drain: 9},
+                {name: "Target Cracker", effect: "Крит. урон +120%", drain: 9}
+            ],
+            melee: [
+                {name: "Pressure Point", effect: "Урон +120%", drain: 9},
+                {name: "Blood Rush", effect: "Крит. шанс увеличивается с комбо", drain: 12},
+                {name: "Berserker", effect: "Скорость атаки +30% за крит", drain: 11},
+                {name: "Organ Shatter", effect: "Крит. урон +90%", drain: 9},
+                {name: "Condition Overload", effect: "Урон +120% за каждый статус", drain: 14}
+            ],
+            warframe: [
+                {name: "Intensify", effect: "Сила +30%", drain: 9},
+                {name: "Stretch", effect: "Дальность +45%", drain: 9},
+                {name: "Streamline", effect: "Эффективность +25%", drain: 9},
+                {name: "Continuity", effect: "Длительность +30%", drain: 9},
+                {name: "Vitality", effect: "Здоровье +440%", drain: 12},
+                {name: "Steel Fiber", effect: "Броня +110%", drain: 12}
+            ],
+            companion: [
+                {name: "Animal Instinct", effect: "Радар +30м, Обнаружение трупов +15м", drain: 6},
+                {name: "Vacuum", effect: "Притягивание лута 11.5м", drain: 6},
+                {name: "Fetch", effect: "Притягивание лута 11.5м", drain: 6},
+                {name: "Medi-Pet Kit", effect: "Здоровье +100%, Скорость восстановления +6", drain: 9},
+                {name: "Link Health", effect: "Здоровье +110% от варфрейма", drain: 10}
+            ]
+        };
+        
+        // Инициализация страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Заполняем выпадающие списки
+            populateWeaponType();
+            populateWarframeSelect();
+            populateCompanionType();
             
-            // Показываем только последние 5 записей
-            const lastFive = taraList.slice(-5);
-            const hiddenCount = Math.max(0, taraList.length - 5);
+            // Добавляем начальные слоты для модов
+            addModSlot();
+            addWarframeModSlot();
+            addCompanionModSlot();
+        });
+        
+        // Функции для работы с вкладками
+        function openTab(tabName) {
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
             
-            lastFive.forEach(item => {
-                const row = document.createElement('tr');
-                const taraCell = document.createElement('td');
-                const timeCell = document.createElement('td');
-                taraCell.textContent = item.tara;
-                timeCell.textContent = item.time;
-                row.appendChild(taraCell);
-                row.appendChild(timeCell);
-                tableBody.appendChild(row);
-            });
-
-            // Показываем количество скрытых записей
-            if (hiddenCount > 0) {
-                totalCountElement.textContent = `+ ещё ${hiddenCount} записей (всего: ${taraList.length})`;
-            } else if (taraList.length > 0) {
-                totalCountElement.textContent = `Всего записей: ${taraList.length}`;
-            } else {
-                totalCountElement.textContent = 'Нет записей';
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
             }
+            
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
         }
-
-        function downloadAndReset() {
-            const confirmDownload = confirm("Вы уверены, что хотите скачать и сбросить данные?");
-            if (confirmDownload) {
-                // Скачиваем файл
-                const blob = new Blob([generateCSV()], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'tara_data_' + new Date().toISOString().slice(0, 10) + '.csv';
-                document.body.appendChild(link);
-                link.click();
+        
+        // Функции для работы с оружием
+        function populateWeaponType() {
+            const weaponTypeSelect = document.getElementById('weapon-type');
+            weaponTypeSelect.addEventListener('change', function() {
+                const weaponSelect = document.getElementById('weapon-select');
+                weaponSelect.innerHTML = '<option value="">-- Выберите оружие --</option>';
                 
-                // Сбрасываем данные после скачивания
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                    
-                    // Очищаем данные
-                    taraList = [];
-                    localStorage.removeItem('taraList');
-                    updateTable();
-                }, 100);
-            }
-        }
-
-        function removeDuplicates() {
-            const confirmRemove = confirm("Вы уверены, что хотите удалить дубликаты? Это действие нельзя отменить.");
-            if (confirmRemove) {
-                const unique = [];
-                const seen = new Set();
-                
-                // Идем с конца, чтобы сохранить последние записи
-                for (let i = taraList.length - 1; i >= 0; i--) {
-                    const item = taraList[i];
-                    if (!seen.has(item.tara)) {
-                        seen.add(item.tara);
-                        unique.unshift(item); // Добавляем в начало, чтобы сохранить порядок
-                    }
+                if (this.value) {
+                    weaponsDatabase[this.value].forEach(weapon => {
+                        const option = document.createElement('option');
+                        option.value = weapon;
+                        option.textContent = weapon;
+                        weaponSelect.appendChild(option);
+                    });
                 }
                 
-                taraList = unique;
-                localStorage.setItem('taraList', JSON.stringify(taraList));
-                updateTable();
-                alert(`Удалено ${taraList.length - unique.length} дубликатов.`);
-            }
-        }
-
-        function generateCSV() {
-            let csvContent = "Тара,Время\n";
-            taraList.forEach(item => {
-                csvContent += `"${item.tara.replace(/"/g, '""')}","${item.time}"\n`;
+                // Обновляем рекомендуемые моды
+                updateRecommendedMods(this.value, 'weapon');
             });
-            return csvContent;
         }
-
-        // Обработка нажатия Enter
-        document.getElementById('taraInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                addTara();
+        
+        // Функции для работы с варфреймами
+        function populateWarframeSelect() {
+            const warframeSelect = document.getElementById('warframe-select');
+            warframesDatabase.forEach(warframe => {
+                const option = document.createElement('option');
+                option.value = warframe;
+                option.textContent = warframe;
+                warframeSelect.appendChild(option);
+            });
+            
+            warframeSelect.addEventListener('change', function() {
+                if (this.value) {
+                    updateRecommendedMods(this.value, 'warframe');
+                }
+            });
+        }
+        
+        // Функции для работы с компаньонами
+        function populateCompanionType() {
+            const companionTypeSelect = document.getElementById('companion-type');
+            companionTypeSelect.addEventListener('change', function() {
+                const companionSelect = document.getElementById('companion-select');
+                companionSelect.innerHTML = '<option value="">-- Выберите компаньона --</option>';
+                
+                if (this.value) {
+                    companionsDatabase[this.value].forEach(companion => {
+                        const option = document.createElement('option');
+                        option.value = companion;
+                        option.textContent = companion;
+                        companionSelect.appendChild(option);
+                    });
+                }
+                
+                // Обновляем рекомендуемые моды
+                updateRecommendedMods(this.value, 'companion');
+            });
+        }
+        
+        // Функции для работы с модами
+        function addModSlot() {
+            const weaponType = document.getElementById('weapon-type').value;
+            if (!weaponType) {
+                alert('Сначала выберите тип оружия');
+                return;
             }
-        });
+            
+            const modSlots = document.getElementById('mod-slots');
+            const modSlot = document.createElement('div');
+            modSlot.className = 'mod-slot';
+            
+            const modSelect = document.createElement('select');
+            modSelect.innerHTML = '<option value="">-- Выберите мод --</option>';
+            
+            modsDatabase[weaponType].forEach(mod => {
+                const option = document.createElement('option');
+                option.value = mod.name;
+                option.textContent = `${mod.name} (${mod.effect})`;
+                modSelect.appendChild(option);
+            });
+            
+            const rankInput = document.createElement('input');
+            rankInput.type = 'number';
+            rankInput.min = '0';
+            rankInput.max = '10';
+            rankInput.value = '0';
+            rankInput.placeholder = 'Ранг';
+            
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'X';
+            removeButton.onclick = function() {
+                modSlots.removeChild(modSlot);
+                calculateStats();
+            };
+            
+            modSlot.appendChild(modSelect);
+            modSlot.appendChild(rankInput);
+            modSlot.appendChild(removeButton);
+            
+            modSelect.addEventListener('change', calculateStats);
+            rankInput.addEventListener('change', calculateStats);
+            
+            modSlots.appendChild(modSlot);
+        }
+        
+        function addWarframeModSlot() {
+            const modSlots = document.getElementById('warframe-mod-slots');
+            const modSlot = document.createElement('div');
+            modSlot.className = 'mod-slot';
+            
+            const modSelect = document.createElement('select');
+            modSelect.innerHTML = '<option value="">-- Выберите мод --</option>';
+            
+            modsDatabase.warframe.forEach(mod => {
+                const option = document.createElement('option');
+                option.value = mod.name;
+                option.textContent = `${mod.name} (${mod.effect})`;
+                modSelect.appendChild(option);
+            });
+            
+            const rankInput = document.createElement('input');
+            rankInput.type = 'number';
+            rankInput.min = '0';
+            rankInput.max = '10';
+            rankInput.value = '0';
+            rankInput.placeholder = 'Ранг';
+            
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'X';
+            removeButton.onclick = function() {
+                modSlots.removeChild(modSlot);
+                calculateStats();
+            };
+            
+            modSlot.appendChild(modSelect);
+            modSlot.appendChild(rankInput);
+            modSlot.appendChild(removeButton);
+            
+            modSelect.addEventListener('change', calculateStats);
+            rankInput.addEventListener('change', calculateStats);
+            
+            modSlots.appendChild(modSlot);
+        }
+        
+        function addCompanionModSlot() {
+            const modSlots = document.getElementById('companion-mod-slots');
+            const modSlot = document.createElement('div');
+            modSlot.className = 'mod-slot';
+            
+            const modSelect = document.createElement('select');
+            modSelect.innerHTML = '<option value="">-- Выберите мод --</option>';
+            
+            modsDatabase.companion.forEach(mod => {
+                const option = document.createElement('option');
+                option.value = mod.name;
+                option.textContent = `${mod.name} (${mod.effect})`;
+                modSelect.appendChild(option);
+            });
+            
+            const rankInput = document.createElement('input');
+            rankInput.type = 'number';
+            rankInput.min = '0';
+            rankInput.max = '10';
+            rankInput.value = '0';
+            rankInput.placeholder = 'Ранг';
+            
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'X';
+            removeButton.onclick = function() {
+                modSlots.removeChild(modSlot);
+                calculateStats();
+            };
+            
+            modSlot.appendChild(modSelect);
+            modSlot.appendChild(rankInput);
+            modSlot.appendChild(removeButton);
+            
+            modSelect.addEventListener('change', calculateStats);
+            rankInput.addEventListener('change', calculateStats);
+            
+            modSlots.appendChild(modSlot);
+        }
+        
+        // Расчет статистики
+        function calculateStats() {
+            const statsContainer = document.getElementById('stats-container');
+            statsContainer.innerHTML = '<p>Выберите оружие/варфрейм/компаньона и добавьте моды для отображения статистики.</p>';
+            
+            // Здесь должна быть логика расчета характеристик на основе выбранных модов
+            // Это упрощенная версия для демонстрации
+            
+            const weaponSelect = document.getElementById('weapon-select');
+            const warframeSelect = document.getElementById('warframe-select');
+            const companionSelect = document.getElementById('companion-select');
+            
+            if (weaponSelect.value || warframeSelect.value || companionSelect.value) {
+                let statsHTML = '';
+                
+                if (weaponSelect.value) {
+                    statsHTML += `
+                        <div class="stat-row">
+                            <span class="stat-name">Урон:</span>
+                            <span class="stat-value">1000</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Крит. шанс:</span>
+                            <span class="stat-value">25%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Крит. урон:</span>
+                            <span class="stat-value">2.5x</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Скорострельность:</span>
+                            <span class="stat-value">10.0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Статус:</span>
+                            <span class="stat-value">30%</span>
+                        </div>
+                    `;
+                } else if (warframeSelect.value) {
+                    statsHTML += `
+                        <div class="stat-row">
+                            <span class="stat-name">Здоровье:</span>
+                            <span class="stat-value">1000</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Щиты:</span>
+                            <span class="stat-value">800</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Броня:</span>
+                            <span class="stat-value">500</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Энергия:</span>
+                            <span class="stat-value">300</span>
+                        </div>
+                    `;
+                } else if (companionSelect.value) {
+                    statsHTML += `
+                        <div class="stat-row">
+                            <span class="stat-name">Здоровье:</span>
+                            <span class="stat-value">500</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Щиты:</span>
+                            <span class="stat-value">300</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Броня:</span>
+                            <span class="stat-value">200</span>
+                        </div>
+                    `;
+                }
+                
+                statsContainer.innerHTML = statsHTML;
+                
+                // Анализ эффективности против мобов
+                analyzeEnemyLevel();
+            }
+        }
+        
+        // Анализ эффективности против уровней мобов
+        function analyzeEnemyLevel() {
+            const analysisContainer = document.getElementById('enemy-analysis');
+            
+            // Упрощенный анализ для демонстрации
+            const weaponSelect = document.getElementById('weapon-select');
+            const warframeSelect = document.getElementById('warframe-select');
+            const companionSelect = document.getElementById('companion-select');
+            
+            if (weaponSelect.value) {
+                analysisContainer.innerHTML = `
+                    <p>Этот билд эффективен против:</p>
+                    <ul>
+                        <li>Обычные мобы: до уровня 80-100</li>
+                        <li>Элитные мобы: до уровня 60-80</li>
+                        <li>Боссы: до уровня 40-60</li>
+                    </ul>
+                    <p>Для более высоких уровней рекомендуется оптимизировать билд.</p>
+                `;
+            } else if (warframeSelect.value) {
+                analysisContainer.innerHTML = `
+                    <p>Этот билд позволяет выживать против:</p>
+                    <ul>
+                        <li>Обычные мобы: до уровня 120-150</li>
+                        <li>Элитные мобы: до уровня 100-120</li>
+                        <li>Боссы: до уровня 80-100</li>
+                    </ul>
+                `;
+            } else if (companionSelect.value) {
+                analysisContainer.innerHTML = `
+                    <p>Этот билд компаньона эффективен в:</p>
+                    <ul>
+                        <li>Обычных миссиях: все уровни</li>
+                        <li>Сложных миссиях: до уровня 80</li>
+                        <li>Арбитражах: до уровня 60</li>
+                    </ul>
+                `;
+            }
+        }
+        
+        // Обновление рекомендуемых модов
+        function updateRecommendedMods(selectedValue, type) {
+            const modsContainer = document.getElementById('recommended-mods-container');
+            modsContainer.innerHTML = '';
+            
+            if (!selectedValue) return;
+            
+            const header = document.createElement('h4');
+            header.textContent = 'Рекомендуемые моды:';
+            modsContainer.appendChild(header);
+            
+            let modsToShow = [];
+            
+            if (type === 'weapon') {
+                modsToShow = modsDatabase[selectedValue];
+            } else if (type === 'warframe') {
+                modsToShow = modsDatabase.warframe;
+            } else if (type === 'companion') {
+                modsToShow = modsDatabase.companion;
+            }
+            
+            modsToShow.forEach(mod => {
+                const modCard = document.createElement('div');
+                modCard.className = 'mod-card';
+                modCard.innerHTML = `
+                    <strong>${mod.name}</strong><br>
+                    ${mod.effect}<br>
+                    Дренаж: ${mod.drain}
+                `;
+                modCard.onclick = function() {
+                    addRecommendedMod(mod, type);
+                };
+                modsContainer.appendChild(modCard);
+            });
+        }
+        
+        // Добавление рекомендуемого мода
+        function addRecommendedMod(mod, type) {
+            let modSlots, addFunction;
+            
+            if (type === 'weapon') {
+                modSlots = document.getElementById('mod-slots');
+                addFunction = addModSlot;
+            } else if (type === 'warframe') {
+                modSlots = document.getElementById('warframe-mod-slots');
+                addFunction = addWarframeModSlot;
+            } else if (type === 'companion') {
+                modSlots = document.getElementById('companion-mod-slots');
+                addFunction = addCompanionModSlot;
+            }
+            
+            // Добавляем новый слот, если все существующие заполнены
+            let emptySlotFound = false;
+            const slots = modSlots.getElementsByClassName('mod-slot');
+            
+            for (let i = 0; i < slots.length; i++) {
+                const select = slots[i].getElementsByTagName('select')[0];
+                if (select.value === '') {
+                    select.value = mod.name;
+                    emptySlotFound = true;
+                    break;
+                }
+            }
+            
+            if (!emptySlotFound) {
+                addFunction();
+                const newSelect = modSlots.lastChild.getElementsByTagName('select')[0];
+                newSelect.value = mod.name;
+            }
+            
+            calculateStats();
+        }
+        
+        // Функции оптимизации билда
+        function optimizeBuild() {
+            const weaponSelect = document.getElementById('weapon-select');
+            if (!weaponSelect.value) {
+                alert('Сначала выберите оружие');
+                return;
+            }
+            
+            // Упрощенная "оптимизация" для демонстрации
+            alert('Билд оптимизирован! Проверьте обновленные характеристики.');
+            calculateStats();
+        }
+        
+        function optimizeWarframeBuild() {
+            const warframeSelect = document.getElementById('warframe-select');
+            if (!warframeSelect.value) {
+                alert('Сначала выберите варфрейм');
+                return;
+            }
+            
+            alert('Билд оптимизирован! Проверьте обновленные характеристики.');
+            calculateStats();
+        }
+        
+        function optimizeCompanionBuild() {
+            const companionSelect = document.getElementById('companion-select');
+            if (!companionSelect.value) {
+                alert('Сначала выберите компаньона');
+                return;
+            }
+            
+            alert('Билд оптимизирован! Проверьте обновленные характеристики.');
+            calculateStats();
+        }
     </script>
 </body>
 </html>
