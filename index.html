@@ -1,808 +1,856 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warframe Builder - Оптимизатор билдов</title>
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #34495e;
-            --accent-color: #e74c3c;
-            --text-color: #ecf0f1;
-            --highlight-color: #3498db;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--primary-color);
-            color: var(--text-color);
-        }
-        
-        header {
-            background-color: var(--secondary-color);
-            padding: 1rem;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-        
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            padding: 1rem;
-            gap: 1rem;
-        }
-        
-        .builder-section {
-            flex: 1;
-            min-width: 300px;
-            background-color: var(--secondary-color);
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        
-        .results-section {
-            flex: 2;
-            min-width: 300px;
-            background-color: var(--secondary-color);
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        
-        h1, h2, h3 {
-            color: var(--highlight-color);
-        }
-        
-        select, input, button {
-            padding: 0.5rem;
-            margin: 0.5rem 0;
-            border-radius: 4px;
-            border: none;
-            background-color: #3d566e;
-            color: var(--text-color);
-            width: 100%;
-        }
-        
-        button {
-            background-color: var(--accent-color);
-            cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        
-        button:hover {
-            background-color: #c0392b;
-        }
-        
-        .mod-slot {
-            display: flex;
-            align-items: center;
-            margin: 0.5rem 0;
-            padding: 0.5rem;
-            background-color: #3d566e;
-            border-radius: 4px;
-        }
-        
-        .mod-slot select {
-            flex: 1;
-            margin-right: 0.5rem;
-        }
-        
-        .mod-slot input {
-            width: 60px;
-        }
-        
-        .stats-display {
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: #3d566e;
-            border-radius: 4px;
-        }
-        
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 0.5rem 0;
-        }
-        
-        .stat-name {
-            font-weight: bold;
-        }
-        
-        .stat-value {
-            color: var(--highlight-color);
-        }
-        
-        .enemy-level-analysis {
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: #3d566e;
-            border-radius: 4px;
-        }
-        
-        .recommended-mods {
-            margin-top: 1rem;
-        }
-        
-        .mod-card {
-            display: inline-block;
-            margin: 0.5rem;
-            padding: 0.5rem;
-            background-color: #3d566e;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .mod-card:hover {
-            transform: scale(1.05);
-            background-color: var(--highlight-color);
-        }
-        
-        .tab-container {
-            margin-top: 1rem;
-        }
-        
-        .tab-buttons {
-            display: flex;
-            border-bottom: 2px solid var(--highlight-color);
-        }
-        
-        .tab-button {
-            padding: 0.5rem 1rem;
-            background-color: var(--secondary-color);
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        
-        .tab-button.active {
-            background-color: var(--highlight-color);
-        }
-        
-        .tab-content {
-            display: none;
-            padding: 1rem 0;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, height=device-height">
+  <title>Проверка Excel-файла</title>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PSE0NWCE8Y"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-PSE0NWCE8Y');
+    
+    // Функция для отправки событий
+    function trackEvent(eventName, eventParams = {}) {
+      gtag('event', eventName, {
+        ...eventParams,
+        'user_fio': currentUser?.fio || 'guest',
+        'user_block': currentUser?.block || 'unknown'
+      });
+    }
+  </script>
+  <!-- End Google Analytics -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      height: 100vh;
+    }
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .card {
+      flex: 1;
+      margin: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    th, td {
+      white-space: nowrap;
+      font-size: 1em;
+    }
+    .input-group {
+      margin-bottom: 20px;
+    }
+    input, button, select {
+      font-size: 1em;
+    }
+    .table th {
+      background-color: #007bff;
+      color: white;
+    }
+    .table-striped tbody tr:nth-of-type(odd) {
+      background-color: #f1f1f1;
+    }
+    .table td, .table th {
+      padding: 8px;
+      text-align: center;
+    }
+    .table th {
+      border-top: 2px solid #007bff;
+      border-bottom: 2px solid #007bff;
+    }
+    .table td {
+      border-bottom: 1px solid #dee2e6;
+    }
+    .table-responsive {
+      overflow-y: auto;
+      height: 60vh;
+    }
+    @media (max-width: 576px) {
+      th, td { font-size: 0.9em; }
+    }
+    .editable {
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 3px;
+      transition: background-color 0.2s;
+    }
+    .editable:hover {
+      background-color: #e9ecef;
+    }
+    .editable-input {
+      width: 100%;
+      padding: 4px;
+      border: 1px solid #ced4da;
+      border-radius: 3px;
+    }
+    .status-select {
+      min-width: 180px;
+    }
+    .auth-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .auth-content {
+      background-color: white;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 5px;
+      width: 300px;
+    }
+    .add-row-input {
+      margin-bottom: 5px;
+    }
+    .badge {
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Warframe Builder</h1>
-        <p>Оптимизатор билдов для оружия, компаньонов и варфреймов</p>
-    </header>
-    
-    <div class="container">
-        <div class="builder-section">
-            <h2>Конструктор билда</h2>
-            
-            <div class="tab-container">
-                <div class="tab-buttons">
-                    <button class="tab-button active" onclick="openTab('weapons')">Оружие</button>
-                    <button class="tab-button" onclick="openTab('warframes')">Варфреймы</button>
-                    <button class="tab-button" onclick="openTab('companions')">Компаньоны</button>
-                </div>
-                
-                <div id="weapons" class="tab-content active">
-                    <h3>Выберите оружие</h3>
-                    <select id="weapon-type">
-                        <option value="">-- Тип оружия --</option>
-                        <option value="rifle">Винтовка</option>
-                        <option value="shotgun">Дробовик</option>
-                        <option value="pistol">Пистолет</option>
-                        <option value="melee">Ближний бой</option>
-                        <option value="archgun">Арчган</option>
-                    </select>
-                    
-                    <select id="weapon-select">
-                        <option value="">-- Выберите оружие --</option>
-                        <!-- Опции будут заполнены JavaScript -->
-                    </select>
-                    
-                    <h3>Моды</h3>
-                    <div id="mod-slots">
-                        <!-- Слоты для модов будут созданы JavaScript -->
-                    </div>
-                    
-                    <button onclick="addModSlot()">Добавить слот для мода</button>
-                    <button onclick="optimizeBuild()">Оптимизировать билд</button>
-                </div>
-                
-                <div id="warframes" class="tab-content">
-                    <h3>Выберите варфрейм</h3>
-                    <select id="warframe-select">
-                        <option value="">-- Выберите варфрейм --</option>
-                        <!-- Опции будут заполнены JavaScript -->
-                    </select>
-                    
-                    <h3>Моды</h3>
-                    <div id="warframe-mod-slots">
-                        <!-- Слоты для модов будут созданы JavaScript -->
-                    </div>
-                    
-                    <button onclick="addWarframeModSlot()">Добавить слот для мода</button>
-                    <button onclick="optimizeWarframeBuild()">Оптимизировать билд</button>
-                </div>
-                
-                <div id="companions" class="tab-content">
-                    <h3>Выберите компаньона</h3>
-                    <select id="companion-type">
-                        <option value="">-- Тип компаньона --</option>
-                        <option value="sentinel">Страж</option>
-                        <option value="pet">Питомец</option>
-                        <option value="moa">MOA</option>
-                    </select>
-                    
-                    <select id="companion-select">
-                        <option value="">-- Выберите компаньона --</option>
-                        <!-- Опции будут заполнены JavaScript -->
-                    </select>
-                    
-                    <h3>Моды</h3>
-                    <div id="companion-mod-slots">
-                        <!-- Слоты для модов будут созданы JavaScript -->
-                    </div>
-                    
-                    <button onclick="addCompanionModSlot()">Добавить слот для мода</button>
-                    <button onclick="optimizeCompanionBuild()">Оптимизировать билд</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="results-section">
-            <h2>Результаты</h2>
-            
-            <div class="stats-display">
-                <h3>Характеристики</h3>
-                <div id="stats-container">
-                    <!-- Статистика будет заполнена JavaScript -->
-                    <p>Выберите оружие/варфрейм/компаньона и добавьте моды для отображения статистики.</p>
-                </div>
-            </div>
-            
-            <div class="enemy-level-analysis">
-                <h3>Анализ эффективности</h3>
-                <div id="enemy-analysis">
-                    <!-- Анализ будет заполнен JavaScript -->
-                    <p>После создания билда здесь будет показано, против каких уровней мобов он эффективен.</p>
-                </div>
-            </div>
-            
-            <div class="recommended-mods">
-                <h3>Рекомендуемые моды</h3>
-                <div id="recommended-mods-container">
-                    <!-- Рекомендуемые моды будут заполнены JavaScript -->
-                    <p>После выбора оружия/варфрейма/компаньона здесь появятся рекомендуемые моды.</p>
-                </div>
-            </div>
-        </div>
+
+<!-- Модальное окно авторизации -->
+<div id="authModal" class="auth-modal">
+  <div class="auth-content">
+    <h3 class="text-center mb-4">Авторизация</h3>
+    <div class="mb-3">
+      <label for="userFio" class="form-label">ФИО:</label>
+      <input type="text" class="form-control" id="userFio" placeholder="Введите ваше ФИО">
     </div>
+    <div class="mb-3">
+      <label for="userBlock" class="form-label">Блок:</label>
+      <input type="text" class="form-control" id="userBlock" placeholder="Введите номер блока">
+    </div>
+    <button class="btn btn-primary w-100" onclick="login()">Войти</button>
+  </div>
+</div>
+
+<div class="container" id="mainContent" style="display:none;">
+  <div class="card">
+    <div class="card-body">
+      <h3 class="mb-4 text-center">Проверка Excel-файла</h3>
+      <div class="d-flex justify-content-between mb-3">
+        <div>
+          <span id="userInfo" class="fw-bold"></span>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" onclick="logout()">Выйти</button>
+      </div>
+
+      <!-- Форма загрузки файла -->
+      <div class="mb-3">
+        <input type="file" class="form-control" id="fileInput" accept=".xlsx">
+      </div>
+
+      <!-- Поиск -->
+      <div class="input-group mb-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Поиск по place_cod, place_name, Паллет, Баркод">
+        <button class="btn btn-primary" onclick="search()">Поиск</button>
+        <button class="btn btn-success" onclick="saveSelected()">Сохранить</button>
+        <button class="btn btn-danger" onclick="clearAllData()">Очистить все</button>
+      </div>
+
+      <!-- Форма добавления новой записи -->
+      <div class="mb-4 p-3 border rounded">
+        <h5>Добавить новую запись:</h5>
+        <div class="row g-2">
+          <div class="col-md-2">
+            <input type="text" id="addPlaceCod" class="form-control add-row-input" placeholder="place_cod">
+          </div>
+          <div class="col-md-2">
+            <input type="text" id="addPlaceName" class="form-control add-row-input" placeholder="place_name">
+          </div>
+          <div class="col-md-2">
+            <input type="text" id="addPallet" class="form-control add-row-input" placeholder="Паллет">
+          </div>
+          <div class="col-md-2">
+            <input type="text" id="addBarcode" class="form-control add-row-input" placeholder="Баркод">
+          </div>
+          <div class="col-md-1">
+            <input type="number" id="addBarcodeCount" class="form-control add-row-input" placeholder="Кол-во ШК" value="1">
+          </div>
+          <div class="col-md-2">
+            <select id="addStatus" class="form-select add-row-input">
+              <option value="" selected disabled>Статус</option>
+              <option value="На МХ">На МХ</option>
+              <option value="Совпадает">Совпадает</option>
+              <option value="Буфер">Буфер</option>
+              <option value="Списано">Списано</option>
+              <option value="Не на своём МХ">Не на своём МХ</option>
+              <option value="Хлам">Хлам</option>
+              <option value="ШК">ШК</option>
+              <option value="Нет на МХ">Нет на МХ</option>
+            </select>
+          </div>
+          <div class="col-md-1">
+            <button class="btn btn-outline-primary w-100" onclick="addRow()">Добавить</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Выпадающий список статусов -->
+      <div class="mb-3">
+        <select id="statusSelect" class="form-select status-select" onchange="applyStatusToSelected()">
+          <option value="" selected disabled>Выберите актуальный статус</option>
+          <option value="На МХ">На МХ</option>
+          <option value="Совпадает">Совпадает</option>
+          <option value="Буфер">Буфер</option>
+          <option value="Списано">Списано</option>
+          <option value="Не на своём МХ">Не на своём МХ</option>
+          <option value="Хлам">Хлам</option>
+          <option value="ШК">ШК</option>
+          <option value="Нет на МХ">Нет на МХ</option>
+        </select>
+      </div>
+
+      <!-- Таблица -->
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle" id="dataTable">
+          <thead class="table-light">
+            <tr>
+              <th width="40">✔</th>
+              <th>Количество ШК</th>
+              <th>place_name</th>
+              <th>Паллет</th>
+              <th>Баркод</th>
+              <th>Статус</th>
+              <th>Актуальный статус</th>
+              <th>ФИО</th>
+              <th>Блок</th>
+              <th>Дата</th>
+              <th>place_cod</th>
+            </tr>
+          </thead>
+          <tbody id="results"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allRows = [];
+  let displayedRows = [];
+  let hasUnsavedChanges = false;
+  let currentUser = null;
+
+  const COLUMNS = ['place_cod', 'place_name', 'Паллет', 'Баркод', 'Статус','Количество ШК'];
+  const STORAGE_KEY = 'excelCheckerData';
+  const USER_STORAGE_KEY = 'excelCheckerUser';
+
+  // Инициализация при загрузке страницы
+  document.addEventListener('DOMContentLoaded', () => {
+    trackEvent('page_view');
+    checkAuth();
+    loadFromLocalStorage();
+    setupBeforeUnloadWarning();
     
-    <script>
-        // База данных оружия (упрощенная)
-        const weaponsDatabase = {
-            rifle: ["Soma Prime", "Fulmin", "Acceltra", "Trumna", "Tenora Prime"],
-            shotgun: ["Arca Plasmor", "Tigris Prime", "Corinth Prime", "Kuva Kohm", "Cedo"],
-            pistol: ["Kuva Nukor", "Pyrana Prime", "Catchmoon", "Tenet Cycron", "Athodai"],
-            melee: ["Gram Prime", "Redeemer Prime", "Kronen Prime", "Glaive Prime", "Nikana Prime"],
-            archgun: ["Mausolon", "Imperator Vandal", "Kuva Grattler", "Fluctus", "Corvas"]
-        };
-        
-        // База данных варфреймов
-        const warframesDatabase = [
-            "Excalibur", "Rhino", "Volt", "Saryn", "Mesa", 
-            "Nova", "Trinity", "Nekros", "Wukong", "Wisp"
-        ];
-        
-        // База данных компаньонов
-        const companionsDatabase = {
-            sentinel: ["Carrier", "Helios", "Wyrm", "Shade", "Djinn"],
-            pet: ["Kavat (Smeeta)", "Kavat (Adarza)", "Kubrow (Huras)", "Kubrow (Sahasa)", "Vulpaphyla"],
-            moa: ["Lambeo MOA", "Para MOA", "Oloro MOA"]
-        };
-        
-        // База данных модов (упрощенная)
-        const modsDatabase = {
-            rifle: [
-                {name: "Serration", effect: "Урон +165%", drain: 14},
-                {name: "Split Chamber", effect: "Мультивыстрел +90%", drain: 15},
-                {name: "Vital Sense", effect: "Крит. урон +120%", drain: 9},
-                {name: "Point Strike", effect: "Крит. шанс +150%", drain: 9},
-                {name: "Hellfire", effect: "Огонь +90%", drain: 11},
-                {name: "Stormbringer", effect: "Электричество +90%", drain: 11}
-            ],
-            shotgun: [
-                {name: "Point Blank", effect: "Урон +165%", drain: 14},
-                {name: "Hell's Chamber", effect: "Мультивыстрел +120%", drain: 15},
-                {name: "Blaze", effect: "Урон +60%, Огонь +60%", drain: 11},
-                {name: "Contagious Spread", effect: "Токсины +90%", drain: 11},
-                {name: "Charged Shell", effect: "Электричество +90%", drain: 11}
-            ],
-            pistol: [
-                {name: "Hornet Strike", effect: "Урон +220%", drain: 14},
-                {name: "Barrel Diffusion", effect: "Мультивыстрел +120%", drain: 11},
-                {name: "Lethal Torrent", effect: "Мультивыстрел +60%, Скорострельность +60%", drain: 11},
-                {name: "Pistol Gambit", effect: "Крит. шанс +150%", drain: 9},
-                {name: "Target Cracker", effect: "Крит. урон +120%", drain: 9}
-            ],
-            melee: [
-                {name: "Pressure Point", effect: "Урон +120%", drain: 9},
-                {name: "Blood Rush", effect: "Крит. шанс увеличивается с комбо", drain: 12},
-                {name: "Berserker", effect: "Скорость атаки +30% за крит", drain: 11},
-                {name: "Organ Shatter", effect: "Крит. урон +90%", drain: 9},
-                {name: "Condition Overload", effect: "Урон +120% за каждый статус", drain: 14}
-            ],
-            warframe: [
-                {name: "Intensify", effect: "Сила +30%", drain: 9},
-                {name: "Stretch", effect: "Дальность +45%", drain: 9},
-                {name: "Streamline", effect: "Эффективность +25%", drain: 9},
-                {name: "Continuity", effect: "Длительность +30%", drain: 9},
-                {name: "Vitality", effect: "Здоровье +440%", drain: 12},
-                {name: "Steel Fiber", effect: "Броня +110%", drain: 12}
-            ],
-            companion: [
-                {name: "Animal Instinct", effect: "Радар +30м, Обнаружение трупов +15м", drain: 6},
-                {name: "Vacuum", effect: "Притягивание лута 11.5м", drain: 6},
-                {name: "Fetch", effect: "Притягивание лута 11.5м", drain: 6},
-                {name: "Medi-Pet Kit", effect: "Здоровье +100%, Скорость восстановления +6", drain: 9},
-                {name: "Link Health", effect: "Здоровье +110% от варфрейма", drain: 10}
-            ]
-        };
-        
-        // Инициализация страницы
-        document.addEventListener('DOMContentLoaded', function() {
-            // Заполняем выпадающие списки
-            populateWeaponType();
-            populateWarframeSelect();
-            populateCompanionType();
-            
-            // Добавляем начальные слоты для модов
-            addModSlot();
-            addWarframeModSlot();
-            addCompanionModSlot();
+    document.getElementById('searchInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        search();
+        this.value = '';
+      }
+    });
+  });
+
+  // Проверка авторизации
+  function checkAuth() {
+    const savedUser = localStorage.getItem(USER_STORAGE_KEY);
+    if (savedUser) {
+      try {
+        currentUser = JSON.parse(savedUser);
+        showMainContent();
+        trackEvent('auto_login');
+      } catch (e) {
+        showAuthModal();
+      }
+    } else {
+      showAuthModal();
+    }
+  }
+
+  // Показать модальное окно авторизации
+  function showAuthModal() {
+    document.getElementById('authModal').style.display = 'block';
+    document.getElementById('userFio').focus();
+    trackEvent('auth_modal_shown');
+  }
+
+  // Скрыть модальное окно авторизации
+  function hideAuthModal() {
+    document.getElementById('authModal').style.display = 'none';
+  }
+
+  // Показать основной контент
+  function showMainContent() {
+    document.getElementById('mainContent').style.display = 'flex';
+    document.getElementById('userInfo').textContent = `${currentUser.fio} (Блок ${currentUser.block})`;
+    document.getElementById('searchInput').focus();
+  }
+
+  // Вход в систему
+  function login() {
+    const fio = document.getElementById('userFio').value.trim();
+    const block = document.getElementById('userBlock').value.trim();
+    
+    if (!fio || !block) {
+      alert('Пожалуйста, заполните все поля');
+      trackEvent('login_failed', { reason: 'empty_fields' });
+      return;
+    }
+    
+    currentUser = { fio, block };
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+    hideAuthModal();
+    showMainContent();
+    
+    trackEvent('login_success', {
+      user_fio: fio,
+      user_block: block
+    });
+  }
+
+  // Выход из системы
+  function logout() {
+    if (confirm('Вы уверены, что хотите выйти?')) {
+      trackEvent('logout');
+      localStorage.removeItem(USER_STORAGE_KEY);
+      currentUser = null;
+      document.getElementById('mainContent').style.display = 'none';
+      showAuthModal();
+    }
+  }
+
+  // Загрузка данных из localStorage
+  function loadFromLocalStorage() {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        if (Array.isArray(parsedData)) {
+          allRows = parsedData;
+          trackEvent('data_loaded', {
+            rows_count: allRows.length
+          });
+        }
+      } catch (e) {
+        console.error('Ошибка при загрузке данных:', e);
+        trackEvent('load_data_error', {
+          error: e.message
         });
+      }
+    }
+  }
+
+  // Сохранение данных в localStorage
+  function saveToLocalStorage() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allRows));
+      hasUnsavedChanges = false;
+    } catch (e) {
+      console.error('Ошибка при сохранении данных:', e);
+      trackEvent('save_data_error', {
+        error: e.message
+      });
+    }
+  }
+
+  // Предупреждение при закрытии страницы
+  function setupBeforeUnloadWarning() {
+    window.addEventListener('beforeunload', (e) => {
+      if (hasUnsavedChanges) {
+        trackEvent('unsaved_changes_warning');
+        e.preventDefault();
+        e.returnValue = 'У вас есть несохраненные изменения. Вы уверены, что хотите покинуть страницу?';
+        return e.returnValue;
+      }
+    });
+  }
+
+  // Загрузка файла Excel (измененная часть)
+  document.getElementById('fileInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    trackEvent('file_upload_start', {
+      file_name: file.name,
+      file_size: file.size,
+      file_type: file.type
+    });
+    
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      try {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        const header = rows[0];
+        const indices = COLUMNS.map(col => header.indexOf(col));
         
-        // Функции для работы с вкладками
-        function openTab(tabName) {
-            const tabContents = document.getElementsByClassName('tab-content');
-            for (let i = 0; i < tabContents.length; i++) {
-                tabContents[i].classList.remove('active');
-            }
-            
-            const tabButtons = document.getElementsByClassName('tab-button');
-            for (let i = 0; i < tabButtons.length; i++) {
-                tabButtons[i].classList.remove('active');
-            }
-            
-            document.getElementById(tabName).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
+        const newRows = rows.slice(1).map((row, index) => ({
+          place_cod: row[indices[0]] || '',
+          place_name: row[indices[1]] || '',
+          pallet: row[indices[2]] || '',
+          barcode: row[indices[3]] || '',
+          status: row[indices[4]] || '',
+          barcode_count: row[indices[5]] || 1, // Берем значение из файла или 1 по умолчанию
+          actual_status: '',
+          fio: currentUser.fio,
+          block: currentUser.block,
+          date: new Date().toLocaleString(),
+          id: allRows.length + index,
+          selected: false
+        }));
         
-        // Функции для работы с оружием
-        function populateWeaponType() {
-            const weaponTypeSelect = document.getElementById('weapon-type');
-            weaponTypeSelect.addEventListener('change', function() {
-                const weaponSelect = document.getElementById('weapon-select');
-                weaponSelect.innerHTML = '<option value="">-- Выберите оружие --</option>';
-                
-                if (this.value) {
-                    weaponsDatabase[this.value].forEach(weapon => {
-                        const option = document.createElement('option');
-                        option.value = weapon;
-                        option.textContent = weapon;
-                        weaponSelect.appendChild(option);
-                    });
-                }
-                
-                // Обновляем рекомендуемые моды
-                updateRecommendedMods(this.value, 'weapon');
-            });
-        }
+        allRows = [...allRows, ...newRows];
+        hasUnsavedChanges = true;
+        saveToLocalStorage();
+        search();
         
-        // Функции для работы с варфреймами
-        function populateWarframeSelect() {
-            const warframeSelect = document.getElementById('warframe-select');
-            warframesDatabase.forEach(warframe => {
-                const option = document.createElement('option');
-                option.value = warframe;
-                option.textContent = warframe;
-                warframeSelect.appendChild(option);
-            });
-            
-            warframeSelect.addEventListener('change', function() {
-                if (this.value) {
-                    updateRecommendedMods(this.value, 'warframe');
-                }
-            });
-        }
+        trackEvent('file_upload_success', {
+          file_name: file.name,
+          rows_added: newRows.length,
+          total_rows: allRows.length
+        });
+      } catch (error) {
+        console.error('Ошибка при обработке файла:', error);
+        alert('Ошибка при чтении файла. Проверьте формат и наличие столбца "Количество ШК".');
         
-        // Функции для работы с компаньонами
-        function populateCompanionType() {
-            const companionTypeSelect = document.getElementById('companion-type');
-            companionTypeSelect.addEventListener('change', function() {
-                const companionSelect = document.getElementById('companion-select');
-                companionSelect.innerHTML = '<option value="">-- Выберите компаньона --</option>';
-                
-                if (this.value) {
-                    companionsDatabase[this.value].forEach(companion => {
-                        const option = document.createElement('option');
-                        option.value = companion;
-                        option.textContent = companion;
-                        companionSelect.appendChild(option);
-                    });
-                }
-                
-                // Обновляем рекомендуемые моды
-                updateRecommendedMods(this.value, 'companion');
-            });
-        }
-        
-        // Функции для работы с модами
-        function addModSlot() {
-            const weaponType = document.getElementById('weapon-type').value;
-            if (!weaponType) {
-                alert('Сначала выберите тип оружия');
-                return;
-            }
-            
-            const modSlots = document.getElementById('mod-slots');
-            const modSlot = document.createElement('div');
-            modSlot.className = 'mod-slot';
-            
-            const modSelect = document.createElement('select');
-            modSelect.innerHTML = '<option value="">-- Выберите мод --</option>';
-            
-            modsDatabase[weaponType].forEach(mod => {
-                const option = document.createElement('option');
-                option.value = mod.name;
-                option.textContent = `${mod.name} (${mod.effect})`;
-                modSelect.appendChild(option);
-            });
-            
-            const rankInput = document.createElement('input');
-            rankInput.type = 'number';
-            rankInput.min = '0';
-            rankInput.max = '10';
-            rankInput.value = '0';
-            rankInput.placeholder = 'Ранг';
-            
-            const removeButton = document.createElement('button');
-            removeButton.textContent = 'X';
-            removeButton.onclick = function() {
-                modSlots.removeChild(modSlot);
-                calculateStats();
-            };
-            
-            modSlot.appendChild(modSelect);
-            modSlot.appendChild(rankInput);
-            modSlot.appendChild(removeButton);
-            
-            modSelect.addEventListener('change', calculateStats);
-            rankInput.addEventListener('change', calculateStats);
-            
-            modSlots.appendChild(modSlot);
-        }
-        
-        function addWarframeModSlot() {
-            const modSlots = document.getElementById('warframe-mod-slots');
-            const modSlot = document.createElement('div');
-            modSlot.className = 'mod-slot';
-            
-            const modSelect = document.createElement('select');
-            modSelect.innerHTML = '<option value="">-- Выберите мод --</option>';
-            
-            modsDatabase.warframe.forEach(mod => {
-                const option = document.createElement('option');
-                option.value = mod.name;
-                option.textContent = `${mod.name} (${mod.effect})`;
-                modSelect.appendChild(option);
-            });
-            
-            const rankInput = document.createElement('input');
-            rankInput.type = 'number';
-            rankInput.min = '0';
-            rankInput.max = '10';
-            rankInput.value = '0';
-            rankInput.placeholder = 'Ранг';
-            
-            const removeButton = document.createElement('button');
-            removeButton.textContent = 'X';
-            removeButton.onclick = function() {
-                modSlots.removeChild(modSlot);
-                calculateStats();
-            };
-            
-            modSlot.appendChild(modSelect);
-            modSlot.appendChild(rankInput);
-            modSlot.appendChild(removeButton);
-            
-            modSelect.addEventListener('change', calculateStats);
-            rankInput.addEventListener('change', calculateStats);
-            
-            modSlots.appendChild(modSlot);
-        }
-        
-        function addCompanionModSlot() {
-            const modSlots = document.getElementById('companion-mod-slots');
-            const modSlot = document.createElement('div');
-            modSlot.className = 'mod-slot';
-            
-            const modSelect = document.createElement('select');
-            modSelect.innerHTML = '<option value="">-- Выберите мод --</option>';
-            
-            modsDatabase.companion.forEach(mod => {
-                const option = document.createElement('option');
-                option.value = mod.name;
-                option.textContent = `${mod.name} (${mod.effect})`;
-                modSelect.appendChild(option);
-            });
-            
-            const rankInput = document.createElement('input');
-            rankInput.type = 'number';
-            rankInput.min = '0';
-            rankInput.max = '10';
-            rankInput.value = '0';
-            rankInput.placeholder = 'Ранг';
-            
-            const removeButton = document.createElement('button');
-            removeButton.textContent = 'X';
-            removeButton.onclick = function() {
-                modSlots.removeChild(modSlot);
-                calculateStats();
-            };
-            
-            modSlot.appendChild(modSelect);
-            modSlot.appendChild(rankInput);
-            modSlot.appendChild(removeButton);
-            
-            modSelect.addEventListener('change', calculateStats);
-            rankInput.addEventListener('change', calculateStats);
-            
-            modSlots.appendChild(modSlot);
-        }
-        
-        // Расчет статистики
-        function calculateStats() {
-            const statsContainer = document.getElementById('stats-container');
-            statsContainer.innerHTML = '<p>Выберите оружие/варфрейм/компаньона и добавьте моды для отображения статистики.</p>';
-            
-            // Здесь должна быть логика расчета характеристик на основе выбранных модов
-            // Это упрощенная версия для демонстрации
-            
-            const weaponSelect = document.getElementById('weapon-select');
-            const warframeSelect = document.getElementById('warframe-select');
-            const companionSelect = document.getElementById('companion-select');
-            
-            if (weaponSelect.value || warframeSelect.value || companionSelect.value) {
-                let statsHTML = '';
-                
-                if (weaponSelect.value) {
-                    statsHTML += `
-                        <div class="stat-row">
-                            <span class="stat-name">Урон:</span>
-                            <span class="stat-value">1000</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-name">Крит. шанс:</span>
-                            <span class="stat-value">25%</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-name">Крит. урон:</span>
-                            <span class="stat-value">2.5x</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-name">Скорострельность:</span>
-                            <span class="stat-value">10.0</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-name">Статус:</span>
-                            <span class="stat-value">30%</span>
-                        </div>
-                    `;
-                } else if (warframeSelect.value) {
-                    statsHTML += `
-                        <div class="stat-row">
-                            <span class="stat-name">Здоровье:</span>
-                            <span class="stat-value">1000</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-name">Щиты:</span>
-                            <span class="stat-value">800</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-name">Броня:</span>
-                            <span class="stat-value">500</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-name">Энергия:</span>
-                            <span class="stat-value">300</span>
-                        </div>
-                    `;
-                } else if (companionSelect.value) {
-                    statsHTML += `
-                        <div class="stat-row">
-                            <span class="stat-name">Здоровье:</span>
-                            <span class="stat-value">500</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-name">Щиты:</span>
-                            <span class="stat-value">300</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-name">Броня:</span>
-                            <span class="stat-value">200</span>
-                        </div>
-                    `;
-                }
-                
-                statsContainer.innerHTML = statsHTML;
-                
-                // Анализ эффективности против мобов
-                analyzeEnemyLevel();
-            }
-        }
-        
-        // Анализ эффективности против уровней мобов
-        function analyzeEnemyLevel() {
-            const analysisContainer = document.getElementById('enemy-analysis');
-            
-            // Упрощенный анализ для демонстрации
-            const weaponSelect = document.getElementById('weapon-select');
-            const warframeSelect = document.getElementById('warframe-select');
-            const companionSelect = document.getElementById('companion-select');
-            
-            if (weaponSelect.value) {
-                analysisContainer.innerHTML = `
-                    <p>Этот билд эффективен против:</p>
-                    <ul>
-                        <li>Обычные мобы: до уровня 80-100</li>
-                        <li>Элитные мобы: до уровня 60-80</li>
-                        <li>Боссы: до уровня 40-60</li>
-                    </ul>
-                    <p>Для более высоких уровней рекомендуется оптимизировать билд.</p>
-                `;
-            } else if (warframeSelect.value) {
-                analysisContainer.innerHTML = `
-                    <p>Этот билд позволяет выживать против:</p>
-                    <ul>
-                        <li>Обычные мобы: до уровня 120-150</li>
-                        <li>Элитные мобы: до уровня 100-120</li>
-                        <li>Боссы: до уровня 80-100</li>
-                    </ul>
-                `;
-            } else if (companionSelect.value) {
-                analysisContainer.innerHTML = `
-                    <p>Этот билд компаньона эффективен в:</p>
-                    <ul>
-                        <li>Обычных миссиях: все уровни</li>
-                        <li>Сложных миссиях: до уровня 80</li>
-                        <li>Арбитражах: до уровня 60</li>
-                    </ul>
-                `;
-            }
-        }
-        
-        // Обновление рекомендуемых модов
-        function updateRecommendedMods(selectedValue, type) {
-            const modsContainer = document.getElementById('recommended-mods-container');
-            modsContainer.innerHTML = '';
-            
-            if (!selectedValue) return;
-            
-            const header = document.createElement('h4');
-            header.textContent = 'Рекомендуемые моды:';
-            modsContainer.appendChild(header);
-            
-            let modsToShow = [];
-            
-            if (type === 'weapon') {
-                modsToShow = modsDatabase[selectedValue];
-            } else if (type === 'warframe') {
-                modsToShow = modsDatabase.warframe;
-            } else if (type === 'companion') {
-                modsToShow = modsDatabase.companion;
-            }
-            
-            modsToShow.forEach(mod => {
-                const modCard = document.createElement('div');
-                modCard.className = 'mod-card';
-                modCard.innerHTML = `
-                    <strong>${mod.name}</strong><br>
-                    ${mod.effect}<br>
-                    Дренаж: ${mod.drain}
-                `;
-                modCard.onclick = function() {
-                    addRecommendedMod(mod, type);
-                };
-                modsContainer.appendChild(modCard);
-            });
-        }
-        
-        // Добавление рекомендуемого мода
-        function addRecommendedMod(mod, type) {
-            let modSlots, addFunction;
-            
-            if (type === 'weapon') {
-                modSlots = document.getElementById('mod-slots');
-                addFunction = addModSlot;
-            } else if (type === 'warframe') {
-                modSlots = document.getElementById('warframe-mod-slots');
-                addFunction = addWarframeModSlot;
-            } else if (type === 'companion') {
-                modSlots = document.getElementById('companion-mod-slots');
-                addFunction = addCompanionModSlot;
-            }
-            
-            // Добавляем новый слот, если все существующие заполнены
-            let emptySlotFound = false;
-            const slots = modSlots.getElementsByClassName('mod-slot');
-            
-            for (let i = 0; i < slots.length; i++) {
-                const select = slots[i].getElementsByTagName('select')[0];
-                if (select.value === '') {
-                    select.value = mod.name;
-                    emptySlotFound = true;
-                    break;
-                }
-            }
-            
-            if (!emptySlotFound) {
-                addFunction();
-                const newSelect = modSlots.lastChild.getElementsByTagName('select')[0];
-                newSelect.value = mod.name;
-            }
-            
-            calculateStats();
-        }
-        
-        // Функции оптимизации билда
-        function optimizeBuild() {
-            const weaponSelect = document.getElementById('weapon-select');
-            if (!weaponSelect.value) {
-                alert('Сначала выберите оружие');
-                return;
-            }
-            
-            // Упрощенная "оптимизация" для демонстрации
-            alert('Билд оптимизирован! Проверьте обновленные характеристики.');
-            calculateStats();
-        }
-        
-        function optimizeWarframeBuild() {
-            const warframeSelect = document.getElementById('warframe-select');
-            if (!warframeSelect.value) {
-                alert('Сначала выберите варфрейм');
-                return;
-            }
-            
-            alert('Билд оптимизирован! Проверьте обновленные характеристики.');
-            calculateStats();
-        }
-        
-        function optimizeCompanionBuild() {
-            const companionSelect = document.getElementById('companion-select');
-            if (!companionSelect.value) {
-                alert('Сначала выберите компаньона');
-                return;
-            }
-            
-            alert('Билд оптимизирован! Проверьте обновленные характеристики.');
-            calculateStats();
-        }
-    </script>
+        trackEvent('file_upload_error', {
+          file_name: file.name,
+          error: error.message
+        });
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  // Добавление строки
+  function addRow() {
+    const placeCod = document.getElementById('addPlaceCod').value.trim();
+    const placeName = document.getElementById('addPlaceName').value.trim();
+    const pallet = document.getElementById('addPallet').value.trim();
+    const barcode = document.getElementById('addBarcode').value.trim();
+    const barcodeCount = parseInt(document.getElementById('addBarcodeCount').value) || 1;
+    const status = document.getElementById('addStatus').value;
+    
+    if (!placeCod || !placeName || !pallet || !barcode || !status) {
+      alert('Пожалуйста, заполните все обязательные поля');
+      trackEvent('add_row_validation_failed');
+      return;
+    }
+    
+    const newRow = {
+      place_cod: placeCod,
+      place_name: placeName,
+      pallet: pallet,
+      barcode: barcode,
+      barcode_count: barcodeCount,
+      status: status,
+      actual_status: '',
+      fio: currentUser.fio,
+      block: currentUser.block,
+      date: new Date().toLocaleString(),
+      id: allRows.length,
+      selected: false
+    };
+    
+    allRows.push(newRow);
+    
+    // Очищаем поля ввода
+    document.getElementById('addPlaceCod').value = '';
+    document.getElementById('addPlaceName').value = '';
+    document.getElementById('addPallet').value = '';
+    document.getElementById('addBarcode').value = '';
+    document.getElementById('addBarcodeCount').value = '1';
+    document.getElementById('addStatus').value = '';
+    
+    hasUnsavedChanges = true;
+    saveToLocalStorage();
+    search();
+    document.getElementById('addPlaceCod').focus();
+    
+    trackEvent('row_added', {
+      place_cod: placeCod,
+      pallet: pallet,
+      status: status,
+      barcode_count: barcodeCount
+    });
+  }
+
+  // Поиск по цифрам в place_cod, place_name, Паллет, Баркод
+  function search() {
+    const input = document.getElementById('searchInput').value.trim();
+    const digitsOnly = input.replace(/\D/g, '');
+    
+    if (!digitsOnly) {
+      displayedRows = [];
+      renderTable();
+      document.getElementById('searchInput').value = '';
+      trackEvent('search_cleared');
+      return;
+    }
+    
+    displayedRows = allRows.filter(row => {
+      return (
+        (row.place_cod && row.place_cod.toString().includes(digitsOnly)) ||
+        (row.place_name && row.place_name.toString().includes(digitsOnly)) ||
+        (row.pallet && row.pallet.toString().includes(digitsOnly)) ||
+        (row.barcode && row.barcode.toString().includes(digitsOnly))
+      );
+    }).slice(0, 100);
+    
+    renderTable();
+    document.getElementById('searchInput').value = '';
+    
+    trackEvent('search_performed', {
+      search_query: input,
+      results_count: displayedRows.length
+    });
+  }
+
+  // Отображение таблицы с возможностью редактирования
+  function renderTable() {
+    const body = document.getElementById('results');
+    body.innerHTML = '';
+    
+    if (displayedRows.length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="11" class="text-center text-muted">Нет данных для отображения</td>`;
+      body.appendChild(tr);
+      return;
+    }
+    
+    displayedRows.forEach((row, i) => {
+      const tr = document.createElement('tr');
+      const checkbox = `<td><input type="checkbox" ${row.selected ? 'checked' : ''} onchange="toggleSelect(${i})"></td>`;
+      
+      const createEditableCell = (value, field, rowId) => {
+        return `<div class="editable" onclick="startEdit(this, '${field}', ${rowId})">${value || '—'}</div>`;
+      };
+      
+      const createEditableNumber = (value, field, rowId) => {
+        return `<div class="editable" onclick="startEditNumber(this, '${field}', ${rowId})">${value || '1'}</div>`;
+      };
+      
+      const createEditableStatus = (value, field, rowId, isActual = false) => {
+        if (!value) value = '—';
+        const colorClass = statusColor(value);
+        return `<span class="badge text-bg-${colorClass}" onclick="editStatus(this, '${field}', ${rowId}, ${isActual})">${value}</span>`;
+      };
+      
+      const cells = [
+        `<td>${createEditableNumber(row.barcode_count, 'barcode_count', row.id)}</td>`,
+        `<td>${createEditableCell(row.place_name, 'place_name', row.id)}</td>`,
+        `<td>${createEditableCell(row.pallet, 'pallet', row.id)}</td>`,
+        `<td>${createEditableCell(row.barcode, 'barcode', row.id)}</td>`,
+        `<td>${createEditableStatus(row.status, 'status', row.id)}</td>`,
+        `<td>${createEditableStatus(row.actual_status, 'actual_status', row.id, true)}</td>`,
+        `<td>${row.fio}</td>`,
+        `<td>${row.block}</td>`,
+        `<td>${row.date}</td>`,
+        `<td>${createEditableCell(row.place_cod, 'place_cod', row.id)}</td>`
+      ];
+      
+      tr.innerHTML = checkbox + cells.join('');
+      body.appendChild(tr);
+    });
+  }
+
+  // Начало редактирования ячейки
+  function startEdit(element, field, rowId) {
+    const currentValue = element.textContent === '—' ? '' : element.textContent;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'editable-input';
+    input.value = currentValue;
+    
+    element.innerHTML = '';
+    element.appendChild(input);
+    input.focus();
+    
+    const saveEdit = () => {
+      const newValue = input.value.trim();
+      updateRowData(rowId, field, newValue);
+      element.innerHTML = newValue || '—';
+      
+      trackEvent('cell_edited', {
+        field: field,
+        row_id: rowId,
+        old_value: currentValue,
+        new_value: newValue
+      });
+    };
+    
+    input.addEventListener('blur', saveEdit);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        saveEdit();
+      }
+    });
+  }
+
+  // Начало редактирования числовой ячейки
+  function startEditNumber(element, field, rowId) {
+    const currentValue = element.textContent === '—' ? '' : element.textContent;
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.className = 'editable-input';
+    input.value = currentValue;
+    input.min = "1";
+    
+    element.innerHTML = '';
+    element.appendChild(input);
+    input.focus();
+    
+    const saveEdit = () => {
+      const newValue = parseInt(input.value) || 1;
+      updateRowData(rowId, field, newValue);
+      element.innerHTML = newValue;
+      
+      trackEvent('number_cell_edited', {
+        field: field,
+        row_id: rowId,
+        old_value: currentValue,
+        new_value: newValue
+      });
+    };
+    
+    input.addEventListener('blur', saveEdit);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        saveEdit();
+      }
+    });
+  }
+
+  // Редактирование статуса
+  function editStatus(element, field, rowId, isActual = false) {
+    const statuses = [
+      'На МХ','Совпадает', 'Буфер', 'Списано', 
+      'Не на своём МХ', 'Хлам', 'ШК','Нет на МХ'
+    ];
+    
+    const currentValue = element.textContent === '—' ? '' : element.textContent;
+    const select = document.createElement('select');
+    select.className = 'form-select form-select-sm';
+    
+    const emptyOption = document.createElement('option');
+    emptyOption.value = '';
+    emptyOption.textContent = '—';
+    select.appendChild(emptyOption);
+    
+    statuses.forEach(status => {
+      const option = document.createElement('option');
+      option.value = status;
+      option.textContent = status;
+      if (status === currentValue) option.selected = true;
+      select.appendChild(option);
+    });
+    
+    element.innerHTML = '';
+    element.appendChild(select);
+    select.focus();
+    
+    const saveEdit = () => {
+      const newValue = select.value;
+      updateRowData(rowId, field, newValue);
+      
+      const colorClass = statusColor(newValue);
+      element.className = `badge text-bg-${colorClass}`;
+      element.textContent = newValue || '—';
+      
+      trackEvent('status_changed', {
+        field: field,
+        row_id: rowId,
+        old_status: currentValue,
+        new_status: newValue,
+        is_actual_status: isActual
+      });
+    };
+    
+    select.addEventListener('change', saveEdit);
+    select.addEventListener('blur', saveEdit);
+  }
+
+  // Обновление данных строки
+  function updateRowData(rowId, field, newValue) {
+    const rowIndex = allRows.findIndex(r => r.id === rowId);
+    if (rowIndex !== -1) {
+      const oldValue = allRows[rowIndex][field];
+      allRows[rowIndex][field] = newValue;
+      allRows[rowIndex].fio = currentUser.fio;
+      allRows[rowIndex].block = currentUser.block;
+      allRows[rowIndex].date = new Date().toLocaleString();
+      
+      const displayedIndex = displayedRows.findIndex(r => r.id === rowId);
+      if (displayedIndex !== -1) {
+        displayedRows[displayedIndex][field] = newValue;
+        displayedRows[displayedIndex].fio = currentUser.fio;
+        displayedRows[displayedIndex].block = currentUser.block;
+        displayedRows[displayedIndex].date = new Date().toLocaleString();
+      }
+      
+      hasUnsavedChanges = true;
+      saveToLocalStorage();
+    }
+  }
+
+  // Цвет статуса
+  function statusColor(status) {
+    switch(status) {
+      case 'На МХ': return 'success';
+      case 'Совпадает': return 'success';
+      case 'Буфер': return 'primary';
+      case 'Списано': return 'danger';
+      case 'Не на своём МХ': return 'warning';
+      case 'Хлам': return 'secondary';
+      case 'ШК': return 'info';
+      case 'Нет на МХ': return 'info'; 
+      default: return 'light';
+    }
+  }
+
+  // Выбор строки
+  function toggleSelect(index) {
+    displayedRows[index].selected = !displayedRows[index].selected;
+    const allRowIndex = allRows.findIndex(r => r.id === displayedRows[index].id);
+    if (allRowIndex !== -1) {
+      allRows[allRowIndex].selected = displayedRows[index].selected;
+      hasUnsavedChanges = true;
+      saveToLocalStorage();
+      
+      trackEvent('row_selection_changed', {
+        row_id: displayedRows[index].id,
+        selected: displayedRows[index].selected
+      });
+    }
+  }
+
+  // Применение статуса к выбранным строкам
+  function applyStatusToSelected() {
+    const select = document.getElementById('statusSelect');
+    const status = select.value;
+    if (!status) return;
+    
+    const selectedRows = displayedRows.filter(row => row.selected);
+    if (selectedRows.length === 0) {
+      alert('Нет выбранных строк');
+      return;
+    }
+    
+    selectedRows.forEach((row, index) => {
+      row.actual_status = status;
+      
+      const allRowIndex = allRows.findIndex(r => r.id === row.id);
+      if (allRowIndex !== -1) {
+        allRows[allRowIndex].actual_status = status;
+        allRows[allRowIndex].fio = currentUser.fio;
+        allRows[allRowIndex].block = currentUser.block;
+        allRows[allRowIndex].date = new Date().toLocaleString();
+      }
+    });
+    
+    select.value = '';
+    hasUnsavedChanges = true;
+    saveToLocalStorage();
+    renderTable();
+    document.getElementById('searchInput').focus();
+    
+    trackEvent('bulk_status_change', {
+      status: status,
+      rows_affected: selectedRows.length
+    });
+  }
+
+  // Сохранение выбранных строк
+  function saveSelected() {
+    const selected = allRows.filter(row => row.selected);
+    if (selected.length === 0) {
+      alert("Нет выбранных строк.");
+      trackEvent('save_empty_selection');
+      return;
+    }
+    
+    const headers = ['Количество ШК', 'place_name', 'Паллет', 'Баркод', 'Статус', 'Актуальный статус', 'ФИО', 'Блок','place_cod', 'Дата' , 'Время'];
+    const csv = [headers.join(',')].concat(
+      selected.map(row => [
+        row.barcode_count,
+        row.place_name,
+        row.pallet,
+        row.barcode,
+        row.status,
+        row.actual_status,
+        row.fio,
+        row.block,
+        row.place_cod,
+        row.date,
+        row.date
+      ].join(','))
+    ).join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `selected_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    
+    allRows.forEach(row => row.selected = false);
+    displayedRows.forEach(row => row.selected = false);
+    hasUnsavedChanges = true;
+    saveToLocalStorage();
+    renderTable();
+    document.getElementById('searchInput').focus();
+    
+    trackEvent('data_saved', {
+      rows_saved: selected.length,
+      file_name: link.download
+    });
+  }
+
+  // Очистка всех данных
+  function clearAllData() {
+    if (confirm('Вы уверены, что хотите удалить все данные?')) {
+      const rowsCount = allRows.length;
+      allRows = [];
+      displayedRows = [];
+      localStorage.removeItem(STORAGE_KEY);
+      renderTable();
+      document.getElementById('searchInput').focus();
+      
+      trackEvent('data_cleared', {
+        rows_deleted: rowsCount
+      });
+    }
+  }
+
+  // Отправка событий в Google Analytics
+  function trackEvent(eventName, eventParams = {}) {
+    if (typeof gtag === 'function') {
+      gtag('event', eventName, {
+        ...eventParams,
+        user_fio: currentUser?.fio || 'guest',
+        user_block: currentUser?.block || 'unknown',
+        page_title: document.title,
+        page_location: window.location.href
+      });
+    }
+  }
+</script>
 </body>
 </html>
